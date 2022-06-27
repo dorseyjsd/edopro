@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <fstream>
 #include <fmt/format.h>
-#include "lzma/LzmaLib.h"
+#include <lzma.h>
 #include "common.h"
 #include "utils.h"
 #if defined(__MINGW32__) && defined(UNICODE)
@@ -76,10 +76,19 @@ void Replay::EndRecord(size_t size) {
 	}
 	pheader.datasize = replay_data.size() - sizeof(ReplayHeader);
 	pheader.flag |= REPLAY_COMPRESSED;
-	size_t propsize = 5;
-	auto comp_size = size;
+	size_t comp_size = 0;
 	comp_data.resize(replay_data.size() * 2);
-	LzmaCompress(comp_data.data(), &comp_size, replay_data.data() + sizeof(ReplayHeader), pheader.datasize, pheader.props, &propsize, 5, 1 << 24, 3, 0, 2, 32, 1);
+	lzma_options_lzma opts;
+	lzma_lzma_preset(&opts, 5);
+	opts.dict_size = 1 << 24;
+	lzma_filter filters[]{
+		{ LZMA_FILTER_LZMA1, &opts },
+		{ LZMA_VLI_UNKNOWN,  nullptr},
+	};
+
+	lzma_properties_encode(filters, pheader.props);
+	lzma_ret ret;
+	ret = lzma_raw_buffer_encode(filters, nullptr, replay_data.data() + sizeof(ExtendedReplayHeader), pheader.datasize, comp_data.data(), &comp_size, comp_data.size());
 	comp_data.resize(comp_size);
 	is_recording = false;
 }
@@ -103,10 +112,18 @@ bool Replay::OpenReplayFromBuffer(std::vector<uint8_t>&& contents) {
 	}
 	if(pheader.flag & REPLAY_COMPRESSED) {
 		size_t replay_size = pheader.datasize;
-		auto comp_size = contents.size() - sizeof(ReplayHeader);
-		replay_data.resize(pheader.datasize);
-		if(LzmaUncompress(replay_data.data(), &replay_size, contents.data() + sizeof(ReplayHeader), &comp_size, pheader.props, 5) != SZ_OK)
+		size_t comp_size = contents.size() - header_size;
+		replay_data.resize(replay_size);
+		lzma_filter filters[]{
+			{ LZMA_FILTER_LZMA1, nullptr },
+			{ LZMA_VLI_UNKNOWN,  nullptr},
+		};
+		if(lzma_properties_decode(filters, nullptr, pheader.props, 5) != LZMA_OK)
 			return false;
+		size_t in_pos = 0;
+		size_t out_pos = 0;
+		lzma_raw_buffer_decode(filters, nullptr, contents.data() + header_size, &in_pos, comp_size, replay_data.data(), &out_pos, replay_size);
+		free(filters[0].options);
 	} else {
 		contents.erase(contents.begin(), contents.begin() + sizeof(pheader));
 		replay_data = std::move(contents);
