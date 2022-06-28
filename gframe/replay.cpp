@@ -88,7 +88,7 @@ void Replay::EndRecord(size_t size) {
 
 	lzma_properties_encode(filters, pheader.props);
 	lzma_ret ret;
-	ret = lzma_raw_buffer_encode(filters, nullptr, replay_data.data() + sizeof(ExtendedReplayHeader), pheader.datasize, comp_data.data(), &comp_size, comp_data.size());
+	ret = lzma_raw_buffer_encode(filters, nullptr, replay_data.data() + sizeof(ReplayHeader), pheader.datasize, comp_data.data(), &comp_size, comp_data.size());
 	comp_data.resize(comp_size);
 	is_recording = false;
 }
