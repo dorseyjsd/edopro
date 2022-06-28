@@ -144,17 +144,24 @@ bool Replay::OpenReplayFromBuffer(std::vector<uint8_t>&& contents) {
 		stream.avail_out = pheader.datasize;
 		stream.next_out = replay_data.data();
 
-		lzma_alone_decoder(&stream, UINT64_MAX);
+		if(lzma_alone_decoder(&stream, UINT64_MAX) != LZMA_OK) {
+			Reset();
+			return false;
+		}
 
 		while(stream.avail_in != 0) {
 			// this is should only feed the fake header, if for some reasons
 			// LZMA_STREAM_END is returned, then something went wrong
-			if(lzma_code(&stream, LZMA_RUN) != LZMA_OK)
+			if(lzma_code(&stream, LZMA_RUN) != LZMA_OK) {
+				Reset();
 				return false;
+			}
 		}
 
-		if(stream.total_out != 0)
+		if(stream.total_out != 0) {
+			Reset();
 			return false;
+		}
 
 		stream.avail_in = comp_size;
 		stream.next_in = contents.data() + sizeof(ReplayHeader);
@@ -162,8 +169,10 @@ bool Replay::OpenReplayFromBuffer(std::vector<uint8_t>&& contents) {
 		while(stream.avail_in != 0) {
 			auto ret = lzma_code(&stream, LZMA_RUN);
 			if(ret == LZMA_STREAM_END) {
-				if(stream.total_out != pheader.datasize)
+				if(stream.total_out != pheader.datasize) {
+					Reset();
 					return false;
+				}
 				break;
 			}
 			if(ret != LZMA_OK) {
@@ -172,6 +181,7 @@ bool Replay::OpenReplayFromBuffer(std::vector<uint8_t>&& contents) {
 				// size matches the uncompressed size
 				if(ret == LZMA_DATA_ERROR && stream.total_out == pheader.datasize)
 					break;
+				Reset();
 				return false;
 			}
 		}
