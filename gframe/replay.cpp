@@ -153,12 +153,14 @@ bool Replay::OpenReplayFromBuffer(std::vector<uint8_t>&& contents) {
 			// this is should only feed the fake header, if for some reasons
 			// LZMA_STREAM_END is returned, then something went wrong
 			if(lzma_code(&stream, LZMA_RUN) != LZMA_OK) {
+				lzma_end(&stream);
 				Reset();
 				return false;
 			}
 		}
 
 		if(stream.total_out != 0) {
+			lzma_end(&stream);
 			Reset();
 			return false;
 		}
@@ -170,6 +172,7 @@ bool Replay::OpenReplayFromBuffer(std::vector<uint8_t>&& contents) {
 			auto ret = lzma_code(&stream, LZMA_RUN);
 			if(ret == LZMA_STREAM_END) {
 				if(stream.total_out != pheader.datasize) {
+					lzma_end(&stream);
 					Reset();
 					return false;
 				}
@@ -182,9 +185,11 @@ bool Replay::OpenReplayFromBuffer(std::vector<uint8_t>&& contents) {
 				if(ret == LZMA_DATA_ERROR && stream.total_out == pheader.datasize)
 					break;
 				Reset();
+				lzma_end(&stream);
 				return false;
 			}
 		}
+		lzma_end(&stream);
 	} else {
 		contents.erase(contents.begin(), contents.begin() + sizeof(pheader));
 		replay_data = std::move(contents);
