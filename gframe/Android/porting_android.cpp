@@ -430,7 +430,7 @@ std::vector<epro::Address> getLocalIP() {
 	}
 
 	jnienv->DeleteLocalRef(ipArray);
-	return ret;
+	return addresses;
 }
 
 #define JAVAVOIDSTRINGMETHOD(name)\

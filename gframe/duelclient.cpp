@@ -4458,12 +4458,12 @@ void DuelClient::BroadcastReply(evutil_socket_t fd, short events, void* arg) {
 			ipaddr = epro::Address{ &reinterpret_cast<sockaddr_in&>(bc_addr).sin_addr.s_addr, epro::Address::INET };
 		} else if(bc_addr.ss_family == AF_INET6) {
 			auto IsV6AddressV4Mapped = [](const in6_addr& in6_addr) {
-				return in6_addr.s6_words[0] == 0 &&
-					in6_addr.s6_words[1] == 0 &&
-					in6_addr.s6_words[2] == 0 &&
-					in6_addr.s6_words[3] == 0 &&
-					in6_addr.s6_words[4] == 0 &&
-					in6_addr.s6_words[5] == 0xFFFF;
+				return in6_addr.s6_addr[0] == 0 && in6_addr.s6_addr[5] == 0 &&
+					in6_addr.s6_addr[1] == 0 && in6_addr.s6_addr[6] == 0 &&
+					in6_addr.s6_addr[2] == 0 && in6_addr.s6_addr[7] == 0 &&
+					in6_addr.s6_addr[3] == 0 && in6_addr.s6_addr[8] == 0 &&
+					in6_addr.s6_addr[4] == 0 && in6_addr.s6_addr[9] == 0 &&
+					in6_addr.s6_addr[10] == 0xFF && in6_addr.s6_addr[11] == 0xFF;
 			};
 			const auto& v6addr = reinterpret_cast<sockaddr_in6&>(bc_addr).sin6_addr;
 			if(IsV6AddressV4Mapped(v6addr))
