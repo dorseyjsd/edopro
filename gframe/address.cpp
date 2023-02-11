@@ -53,6 +53,17 @@ std::basic_string<wchar_t> Address::format() const {
 	return BufferIO::DecodeUTF8(format<char>());
 }
 
+bool Host::operator==(const Host& other) const {
+	if(address.family != other.address.family)
+		return false;
+	if(port != other.port)
+		return false;
+	if(address.family == address.INET) {
+		return memcmp(address.buffer, other.address.buffer, sizeof(in_addr::s_addr)) == 0;
+	}
+	return memcmp(address.buffer, other.address.buffer, sizeof(in6_addr::s6_addr)) == 0;
+}
+
 Host Host::resolve(epro::stringview address, uint16_t port) {
 	Address resolved_address{ address.data() };
 	if(resolved_address.family == Address::UNK) {

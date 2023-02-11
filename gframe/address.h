@@ -39,26 +39,7 @@ public:
 struct Host {
 	Address address{};
 	uint16_t port{};
-	bool operator<(const Host& other) const {
-		if(address.family != other.address.family)
-			return (static_cast<int32_t>(address.family) - static_cast<int32_t>(other.address.family)) < 0;
-		if(port != other.port)
-			return (static_cast<int32_t>(port) - static_cast<int32_t>(other.port)) < 0;
-		if(address.family == address.INET) {
-			return memcmp(address.buffer, other.address.buffer, sizeof(in_addr::s_addr)) < 0;
-		}
-		return memcmp(address.buffer, other.address.buffer, sizeof(in6_addr::s6_addr)) < 0;
-	}
-	bool operator==(const Host& other) const {
-		if(address.family != other.address.family)
-			return false;
-		if(port != other.port)
-			return false;
-		if(address.family == address.INET) {
-			return memcmp(address.buffer, other.address.buffer, sizeof(in_addr::s_addr)) == 0;
-		}
-		return memcmp(address.buffer, other.address.buffer, sizeof(in6_addr::s6_addr)) == 0;
-	}
+	bool operator==(const Host& other) const;
 	static Host resolve(epro::wstringview address, epro::wstringview port) {
 		return resolve(BufferIO::EncodeUTF8(address), static_cast<uint16_t>(std::stoi({ port.data(), port.size() })));
 	}

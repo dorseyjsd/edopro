@@ -420,9 +420,9 @@ std::vector<epro::Address> getLocalIP() {
 		jbyteArray ipBuffer = static_cast<jbyteArray>(jnienv->GetObjectArrayElement(ipArray, i));
 		int ipBufferSize = jnienv->GetArrayLength(ipBuffer);
 		jbyte* ipJava = jnienv->GetByteArrayElements(ipBuffer, nullptr);
-		if(ipBufferSize == sizeof(in_addr::s_addr)) {
+		if(ipBufferSize == 4) {
 			addresses.emplace_back(ipJava, epro::Address::INET);
-		} else if(ipBufferSize == sizeof(in6_addr::s6_addr)) {
+		} else {
 			addresses.emplace_back(ipJava, epro::Address::INET6);
 		}
 		jnienv->ReleaseByteArrayElements(ipBuffer, ipJava, JNI_ABORT);
