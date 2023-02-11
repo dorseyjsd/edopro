@@ -4330,7 +4330,7 @@ void DuelClient::BeginRefreshHost() {
 		if(reply == EVUTIL_INVALID_SOCKET)
 			return EVUTIL_INVALID_SOCKET;
 		int off = 0;
-		if(setsockopt(reply, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&off, (ev_socklen_t)sizeof(off) != 0)) {
+		if(setsockopt(reply, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&off, (ev_socklen_t)sizeof(off)) != 0) {
 			evutil_closesocket(reply);
 			return EVUTIL_INVALID_SOCKET;
 		}
