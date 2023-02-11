@@ -1,6 +1,9 @@
 #include <event2/event.h>
 #include "address.h"
 #include "bufferio.h"
+#ifdef __linux__
+#include <netinet/in.h>
+#endif
 
 namespace epro {
 
