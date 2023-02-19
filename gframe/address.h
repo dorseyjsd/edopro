@@ -25,7 +25,7 @@ public:
 		INET6,
 	};
 	Address() : family(UNK) {}
-	Address(const char* s);
+	explicit Address(const char* s);
 	Address(const void* address, AF family);
 	AF family;
 	void setIP4(const uint32_t* ip);
